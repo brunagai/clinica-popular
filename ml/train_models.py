@@ -11,6 +11,9 @@ from sklearn.model_selection import train_test_split  # Separa treino e teste
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier  # Modelos ML
 from sklearn.metrics import mean_absolute_error, roc_auc_score, classification_report  # Métricas
 import joblib  # Salva modelos em .pkl
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 RNG = 42
 BASE = Path(__file__).parent
@@ -88,7 +91,7 @@ def treinar_espera(df: pd.DataFrame):
     path = MODELS_DIR / "modelo_espera.pkl"
     joblib.dump(model, path)
     print(f"Modelo salvo: {path}")
-    return model, mae
+    return model, mae, X_test, y_test
 
 
 def treinar_noshow(df: pd.DataFrame):
@@ -105,7 +108,29 @@ def treinar_noshow(df: pd.DataFrame):
     path = MODELS_DIR / "modelo_noshow.pkl"
     joblib.dump(model, path)
     print(f"Modelo salvo: {path}")
-    return model, auc
+    return model, auc, X_test, y_test
+    
+    def plotar_resultados(model_espera, X_test_esp, y_test_esp, model_noshow, X_test_nos, y_test_nos):
+    # 1. Gráfico de Regressão (Espera)
+    plt.figure(figsize=(8, 5))
+    preds = model_espera.predict(X_test_esp)
+    plt.scatter(y_test_esp, preds, alpha=0.3)
+    plt.plot([y_test_esp.min(), y_test_esp.max()], [y_test_esp.min(), y_test_esp.max()], 'r--')
+    plt.xlabel("Tempo Real")
+    plt.ylabel("Tempo Previsto")
+    plt.title("Regressão: Real vs. Previsto (Tempo de Espera)")
+    plt.savefig("figura_regressao.png")
+    
+    # 2. Matriz de Confusão (No-Show)
+    plt.figure(figsize=(6, 4))
+    cm = confusion_matrix(y_test_nos, model_noshow.predict(X_test_nos))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.xlabel("Previsto")
+    plt.ylabel("Real")
+    plt.title("Matriz de Confusão (No-show)")
+    plt.savefig("figura_matriz_confusao.png")
+    
+    print("\nGráficos salvos como .png para o seu documento.")
 
 
 def main():
